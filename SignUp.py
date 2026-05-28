@@ -1,6 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox, PhotoImage
 import sqlite3
+import subprocess
+import sys
 
 DB_FILE = "warynow.db"
 
@@ -48,7 +50,6 @@ class SignUpScreen(ctk.CTk):
         self.build_ui()
 
     def build_ui(self):
-        # Αριστερό μαύρο panel
         left_frame = ctk.CTkFrame(self, fg_color="black", width=450, height=600, corner_radius=0)
         left_frame.pack(side="left", fill="both")
         left_frame.pack_propagate(False)
@@ -79,7 +80,7 @@ class SignUpScreen(ctk.CTk):
 
         ctk.CTkButton(left_frame, text="Δημιουργία Λογαριασμού", command=self.create_account,
                       width=250, fg_color="white", text_color="black",
-                      hover_color="lightgray").pack(pady=15)
+                      hover_color="lightgray").pack(pady=10)
 
         ctk.CTkButton(left_frame, text="Είσοδος σαν Επισκέπτης", command=self.enter_as_guest,
                       width=250, fg_color="white", text_color="black",
@@ -89,7 +90,6 @@ class SignUpScreen(ctk.CTk):
                       width=250, fg_color="white", text_color="black",
                       hover_color="lightgray").pack(pady=5)
 
-        # Δεξί λευκό panel με logo
         right_frame = ctk.CTkFrame(self, fg_color="white", width=450, height=600, corner_radius=0)
         right_frame.pack(side="right", fill="both", expand=True)
         right_frame.pack_propagate(False)
@@ -127,12 +127,18 @@ class SignUpScreen(ctk.CTk):
 
     def open_login(self):
         self.destroy()
+        subprocess.Popen([sys.executable, "C:\\Users\\evako\\Downloads\\Login.py"])
 
     def enter_as_guest(self):
         self.destroy()
 
     def back_to_login(self):
         self.destroy()
+        subprocess.Popen([sys.executable, "C:\\Users\\evako\\Downloads\\Login.py"])
+
+if __name__ == "__main__":
+    app = SignUpScreen()
+    app.mainloop()
 
 if __name__ == "__main__":
     app = SignUpScreen()
