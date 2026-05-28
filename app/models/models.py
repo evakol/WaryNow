@@ -163,7 +163,7 @@ class AlertZone(Base):
     radius_km = Column(Float, nullable=False)
     is_active = Column(Integer, default=1)  # 1=ενεργή, 0=ανενεργή
     created_at = Column(DateTime, default=datetime.utcnow)
-
+    country = Column(String)
 class Notification(Base):
     """Ειδοποίηση που αποστέλλεται στον Subscriber (UC8)"""
     __tablename__ = "notifications"
@@ -194,7 +194,7 @@ class Infrastructure(Base):
 def init_db():
     """Δημιουργία των πινάκων αν δεν υπάρχουν"""
     Base.metadata.create_all(engine)
-    
+
 def init_db():
     """Δημιουργία των πινάκων αν δεν υπάρχουν"""
     Base.metadata.create_all(engine)

@@ -19,3 +19,7 @@ SCHEDULER_INTERVAL_MINUTES = 30
 
 # GDELT API
 GDELT_API_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
+# --- Ρυθμίσεις για UC8 & UC9 (Φερίτ) ---
+MAX_ALERT_RADIUS_KM = 500             # Μέγιστη ακτίνα για γεω-ειδοποιήσεις
+INFRASTRUCTURE_SEARCH_RADIUS_KM = 50  # Αρχική ακτίνα αναζήτησης υποδομών
+RADIUS_EXPAND_FACTOR = 1.5            # Παράγοντας αύξησης ακτίνας αν δεν βρεθούν υποδομές
