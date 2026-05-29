@@ -1,6 +1,4 @@
-# main.py
-# Κεντρικό αρχείο εκκίνησης της εφαρμογής
-# Συνδέει UC6 → UC7 και εκκινεί τον Scheduler
+# Σύνδεση UC6 με UC7 και εκκίνηση τον Scheduler
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from app.models.models import init_db
@@ -11,7 +9,7 @@ import config
 def run_pipeline():
     """
     Εκτελεί UC6 και UC7 διαδοχικά.
-    UC6: Ανάκτηση δεδομένων → UC7: Merging
+    UC6: Ανάκτηση δεδομένων από UC7: Merging
     """
     print(f"[UC6] Έναρξη ανάκτησης δεδομένων...")
     activate()
@@ -34,9 +32,8 @@ if __name__ == "__main__":
         minutes=config.SCHEDULER_INTERVAL_MINUTES
     )
 
-    print(f"Scheduler ενεργός - τρέχει κάθε "
+    print(f"Scheduler ενεργός. Τρέχει κάθε "
           f"{config.SCHEDULER_INTERVAL_MINUTES} λεπτά.")
-    
-    # Τρέξε μία φορά αμέσως
+
     run_pipeline()
     scheduler.start()

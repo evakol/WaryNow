@@ -1,59 +1,63 @@
-# app/services/uc6_service.py
-# Υλοποίηση του UC6 - Fetch Conflict Data
+#  UC6 - Fetch Conflict Data
 # Controls: SchedulerController, APIConnector, KeywordFilter, DataNormalizer
 
 import requests
 from datetime import datetime
-from app.models.models import NewsSource, RawReport, ErrorLog, Session
+from app.models.models import get_connection
 import config
 
-# KeywordFilter 
+# KeywordFilter
 def filter_keywords(results):
     """
-    Φιλτράρει τα αποτελέσματα βάσει conflict keywords.
-    ALT-B: αν δεν βρεθεί κανένα match επιστρέφει κενή λίστα.
+    Φιλτράρει αποτελέσματα βάσει conflict keywords.
+    Εναλλακτική Ροή: αν δεν βρεθεί match επιστρέφει κενή λίστα.
     """
     filtered = []
     for item in results:
-        text = (item.get("title", "") + " " + 
+        text = (item.get("title", "") + " " +
                 item.get("description", "")).lower()
         if any(kw in text for kw in config.CONFLICT_KEYWORDS):
             filtered.append(item)
     return filtered
 
-# DataNormalizer 
+# DataNormalizer
 def normalize_and_save(items, source_name):
     """
-    Κανονικοποιεί τα δεδομένα και τα αποθηκεύει ως RawReport.
+    Κανονικοποίηση και αποθήκευση δεδομένων ως RawReport.
     """
-    session = Session()
+    conn = get_connection()
+    cursor = conn.cursor()
     try:
         for item in items:
-            report = RawReport(
-                title=item.get("title", "No title"),
-                description=item.get("description", ""),
-                location=item.get("location", ""),
-                latitude=item.get("latitude"),
-                longitude=item.get("longitude"),
-                source=source_name,
-                status="pending",
-                created_at=datetime.utcnow()
-            )
-            session.add(report)
-        session.commit()
+            cursor.execute("""
+                INSERT INTO raw_reports 
+                (title, description, location, latitude, 
+                longitude, source, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
+            """, (
+                item.get("title", "No title"),
+                item.get("description", ""),
+                item.get("location", ""),
+                item.get("latitude"),
+                item.get("longitude"),
+                source_name,
+                datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            ))
+        conn.commit()
     except Exception as e:
-        session.rollback()
+        conn.rollback()
         raise e
     finally:
-        session.close()
+        conn.close()
 
-# APIConnector
-def fetch_data(source):
+# APIConnector 
+def fetch_data(source_name, source_url):
     """
-    Κάνει HTTP request στο GDELT API για μια NewsSource.
-    ALT-A: αν αποτύχει καταγράφει στο ErrorLog και συνεχίζει.
+    HTTP request στο GDELT API.
+    Εναλλακτική ροή: αν αποτύχει καταγράφει στο ErrorLog.
     """
-    session = Session()
+    conn = get_connection()
+    cursor = conn.cursor()
     try:
         params = {
             "query": "conflict war attack",
@@ -62,51 +66,54 @@ def fetch_data(source):
             "format": "json"
         }
         response = requests.get(
-            config.GDELT_API_URL, 
-            params=params, 
+            config.GDELT_API_URL,
+            params=params,
             timeout=10
         )
         response.raise_for_status()
         data = response.json()
-
-        # Εξαγωγή άρθρων από GDELT response
         articles = data.get("articles", [])
-        
-        # Φιλτράρισμα keywords
+
+        # Filter keywords
         filtered = filter_keywords(articles)
-        
-        # ALT-B: κανένα match
+
+        # Εναλλακτική ροή: κανένα match
         if not filtered:
             return
-        
-        # Αποθήκευση
-        normalize_and_save(filtered, source.name)
+
+        # save
+        normalize_and_save(filtered, source_name)
 
     except Exception as e:
-        # ALT-A: καταγραφή σφάλματος
-        log = ErrorLog(
-            source=source.name,
-            error_message=str(e),
-            created_at=datetime.utcnow()
-        )
-        session.add(log)
-        session.commit()
+        # Εναλλακτική ροή: καταγραφή σφάλματος
+        cursor.execute("""
+            INSERT INTO error_logs 
+            (source, error_message, created_at)
+            VALUES (?, ?, ?)
+        """, (
+            source_name,
+            str(e),
+            datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        ))
+        conn.commit()
     finally:
-        session.close()
+        conn.close()
 
-#  SchedulerController 
+# SchedulerController 
 def activate():
     """
-    Κεντρική μέθοδος UC6. Διαβάζει τις ενεργές NewsSource
-    και καλεί τον APIConnector για κάθε μία.
+    μέθοδος UC6.
+    Διαβάζει ενεργές NewsSource και καλεί APIConnector.
     """
-    session = Session()
+    conn = get_connection()
+    cursor = conn.cursor()
     try:
-        sources = session.query(NewsSource).filter_by(
-            is_active=1
-        ).all()
-        
+        cursor.execute("""
+            SELECT name, url FROM news_sources 
+            WHERE is_active = 1
+        """)
+        sources = cursor.fetchall()
         for source in sources:
-            fetch_data(source)
+            fetch_data(source[0], source[1])
     finally:
-        session.close()
+        conn.close()
