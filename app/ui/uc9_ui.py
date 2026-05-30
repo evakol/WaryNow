@@ -8,7 +8,7 @@ class InfrastructureScreen(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, fg_color="#F3F4F6", **kwargs)
 
-        # --- 1. TOP BAR (Ομοιόμορφη με UC8) ---
+        # --- 1. TOP BAR ---
         self.top_bar = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=0, height=65)
         self.top_bar.pack(fill="x", side="top")
         
@@ -40,7 +40,7 @@ class InfrastructureScreen(ctk.CTkFrame):
         self.filter_frame = ctk.CTkFrame(self.main_card, fg_color="transparent")
         self.filter_frame.pack(pady=10)
 
-        self.id_entry = ctk.CTkEntry(self.filter_frame, placeholder_text="Conflict ID", width=150)
+        self.id_entry = ctk.CTkEntry(self.filter_frame, placeholder_text="Zone ID", width=150)
         self.id_entry.pack(side="left", padx=10)
 
         self.category_var = ctk.StringVar(value="Όλες")
@@ -53,18 +53,8 @@ class InfrastructureScreen(ctk.CTkFrame):
         self.list_textbox.pack(pady=20, padx=40, fill="both", expand=True)
 
     def load_infrastructure(self):
-        # Παίρνουμε την κατηγορία από το UI
         cat = self.category_var.get()
-        
-        # Εδώ καλούμε τη συνάρτηση στέλνοντας την κατηγορία.
-        # Αν η συνάρτηση στο uc9_service.py περιμένει και άλλα ορίσματα (π.χ. data), 
-        # το προσθέτουμε ως κενή λίστα [] μπροστά.
-        try:
-            # Δοκιμάζουμε την κλήση με 2 ορίσματα, αν αποτύχει θα δοκιμάσουμε με 1
-            results = filter_by_category([], cat)
-        except TypeError:
-            # Αν η συνάρτηση θέλει μόνο 1 ορισμό, αυτή η γραμμή θα το διορθώσει
-            results = filter_by_category(cat)
+        results = filter_by_category(cat)
         
         self.list_textbox.configure(state="normal")
         self.list_textbox.delete("1.0", "end")
@@ -73,13 +63,11 @@ class InfrastructureScreen(ctk.CTkFrame):
             self.list_textbox.insert("0.0", "Δεν βρέθηκαν υποδομές για αυτή την κατηγορία.")
         else:
             for item in results:
-                # Εμφάνιση των αποτελεσμάτων
                 self.list_textbox.insert("end", f"🏗️ {item.name}\nΚατηγορία: {item.category}\nΚατάσταση: {item.status}\n{'-'*40}\n")
         
         self.list_textbox.configure(state="disabled")
 
     def show_zones_popup(self):
-        """Εμφάνιση των αποθηκευμένων ζωνών σε popup"""
         popup = ctk.CTkToplevel(self)
         popup.title("Οι Ειδοποιήσεις μου")
         popup.geometry("450x350")
@@ -87,7 +75,6 @@ class InfrastructureScreen(ctk.CTkFrame):
         popup.configure(fg_color="#FFFFFF")
 
         ctk.CTkLabel(popup, text="🔔 Ενεργές Ζώνες", font=ctk.CTkFont(size=18, weight="bold"), text_color="black").pack(pady=(20, 10))
-
         textbox = ctk.CTkTextbox(popup, fg_color="#F3F4F6", text_color="black", corner_radius=10)
         textbox.pack(padx=20, pady=10, fill="both", expand=True)
 
@@ -96,7 +83,7 @@ class InfrastructureScreen(ctk.CTkFrame):
             textbox.insert("0.0", "Δεν έχετε ενεργές ειδοποιήσεις.")
         else:
             for z in zones:
-                display_name = getattr(z, 'country', None) or f"Ζώνη {z.id}"
+                display_name = z.country if z.country else f"Ζώνη {z.id}"
                 textbox.insert("end", f"ID: {z.id} | 📍 {display_name}\nΚέντρο: ({z.center_lat}, {z.center_lng})\nΑκτίνα: {z.radius_km} km\n{'-'*30}\n")
         textbox.configure(state="disabled")
 
