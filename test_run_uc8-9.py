@@ -13,7 +13,7 @@ import config
 if not hasattr(config, 'MAX_ALERT_RADIUS_KM'):
     config.MAX_ALERT_RADIUS_KM = 500
 
-# ── Βοηθητική συνάρτηση αξιολόγησης αποτελέσματος ────────
+# Βοηθητική συνάρτηση αξιολόγησης αποτελέσματος
 def check(test_name, expected, actual):
     """
     Εκτυπώνει το αποτέλεσμα ενός test case.
@@ -28,7 +28,7 @@ def check(test_name, expected, actual):
         print(f"         Πραγματικό:  {actual}")
     return passed
 
-# ── Μετρητές ──────────────────────────────────────────────
+# Μετρητές 
 total = 0
 passed_count = 0
 
@@ -38,12 +38,12 @@ def run_test(test_name, expected, actual):
     if check(test_name, expected, actual):
         passed_count += 1
 
-# ==========================================================
+
 print("=" * 60)
 print("  ΕΝΑΡΞΗ ΔΟΚΙΜΩΝ: USE CASE 8 & USE CASE 9")
 print("=" * 60)
 
-# ── Αρχικοποίηση βάσης ────────────────────────────────────
+# Αρχικοποίηση βάσης 
 init_db()
 print("\n✅ [ΒΑΣΗ] Αρχικοποίηση πινάκων SQLite3.")
 
@@ -79,7 +79,7 @@ conn.commit()
 conn.close()
 print("✅ [ΔΕΔΟΜΕΝΑ] Εισαγωγή δοκιμαστικών οντοτήτων.")
 
-# ==========================================================
+
 print("\n" + "=" * 60)
 print("  UC8 — ΒΑΣΙΚΗ ΡΟΗ: validate_zone()")
 print("=" * 60)
@@ -98,7 +98,7 @@ run_test(
     True, is_valid
 )
 
-# ==========================================================
+
 print("\n" + "=" * 60)
 print("  UC8 — ΕΝΑΛΛΑΚΤΙΚΗ ΡΟΗ: alt [R > 500km]")
 print("=" * 60)
@@ -127,7 +127,7 @@ run_test(
 )
 print(f"         Μήνυμα σφάλματος: {msg}")
 
-# ==========================================================
+
 print("\n" + "=" * 60)
 print("  UC8 — ΕΝΑΛΛΑΚΤΙΚΗ ΡΟΗ: Μη έγκυρες συντεταγμένες")
 print("=" * 60)
@@ -156,7 +156,7 @@ run_test(
 )
 print(f"         Μήνυμα σφάλματος: {msg}")
 
-# ==========================================================
+
 print("\n" + "=" * 60)
 print("  UC8 — ΒΑΣΙΚΗ ΡΟΗ: create_alert_zone() / get_user_zones()")
 print("=" * 60)
@@ -186,7 +186,7 @@ run_test(
     True, len(zones_empty) == 0
 )
 
-# ==========================================================
+
 print("\n" + "=" * 60)
 print("  UC9 — ΒΑΣΙΚΗ ΡΟΗ: filter_by_category()")
 print("=" * 60)
@@ -251,7 +251,7 @@ if military:
         "Στρατιωτική", military[0].category
     )
 
-# ==========================================================
+
 print("\n" + "=" * 60)
 print(f"  ΑΠΟΤΕΛΕΣΜΑ: {passed_count}/{total} tests PASS")
 if passed_count == total:
