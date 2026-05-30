@@ -1,46 +1,38 @@
 import sqlite3
 
-DATABASE_PATH = "warynow.db"
-
 def get_statistics(start_date, end_date):
-    """CheckDataAvailability & CalculateIntensity βάσει ημερομηνιών."""
-    conn = sqlite3.connect(DATABASE_PATH)
+    """Υπολογισμός στατιστικών από τα Conflicts της SQLite για το συγκεκριμένο χρονικό εύρος."""
+    conn = sqlite3.connect("warynow.db")
     cursor = conn.cursor()
     
-    # Έλεγχος αν υπάρχουν Conflicts (CheckDataAvailability)
-    cursor.execute("SELECT * FROM Conflict WHERE created_at >= ? AND created_at <= ?", (start_date, end_date))
-    conflicts = cursor.fetchall()
-    
-    if not conflicts:
+    try:
+        cursor.execute("SELECT status, created_at FROM Conflict")
+        all_conflicts = cursor.fetchall()
         conn.close()
-        return None # Εναλλακτική ροή: showNoDataMessage
         
-    # Υπολογισμός συνόλου και ενεργών (CalculateIntensity)
-    cursor.execute("SELECT COUNT(*) FROM Conflict WHERE created_at >= ? AND created_at <= ?", (start_date, end_date))
-    total_conflicts = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM Conflict WHERE created_at >= ? AND created_at <= ? AND status = 'active'", (start_date, end_date))
-    active_conflicts = cursor.fetchone()[0]
-    
-    conn.close()
-    return {
-        "start": start_date,
-        "end": end_date,
-        "total": total_conflicts,
-        "active": active_conflicts
-    }
+        # Φιλτράρισμα βάσει ημερομηνίας
+        filtered_conflicts = [c for c in all_conflicts if c[1] and (start_date <= c[1] <= end_date)]
+        
+        total_events = len(filtered_conflicts)
+        # Καταμέτρηση ενεργών με μικρά γράμματα 'active'
+        active_count = sum(1 for c in filtered_conflicts if c[0] == "active")
+        
+        return {
+            "total": total_events,
+            "active": active_count,
+            "start_date": start_date,
+            "end_date": end_date
+        }
+    except Exception as e:
+        print(f"[Error] Σφάλμα στατιστικών: {e}")
+        conn.close()
+        return None
 
 def export_statistics_file(stats_data, file_format="CSV"):
-    """
-    FormatFile & ExportFile -> Ενεργοποιείται από το αριστερό μενού 
-    (Παρουσίαση Λειτουργιών / Εξαγωγή στατιστικών).
-    """
+    """Προσομοίωση εξαγωγής και αποθήκευσης του αρχείου στατιστικών στη συσκευή."""
     if not stats_data:
         return False
-    
-    print("\n[UI Action] Ο χρήστης άνοιξε το αριστερό Sidebar...")
-    print("[UI Action] Επιλέχθηκε: 'Εξαγωγή στατιστικών'...")
-    print(f"[FormatFile] Μορφοποίηση των {stats_data['total']} γεγονότων σε {file_format}...")
-    print(f"[ExportFile] Δημιουργία δομής αρχείου αναφοράς...")
-    print(f"[DeviceStorage] Επιτυχής αποθήκευση στη συσκευή!")
+    print(f"\n[FormatFile] Μορφοποίηση δεδομένων σε αρχείο {file_format}...")
+    print(f"[ExportFile] Δημιουργία αναφοράς για το εύρος {stats_data['start_date']} έως {stats_data['end_date']}...")
+    print("[DeviceStorage] Το αρχείο αποθηκεύτηκε επιτυχώς στη συσκευή!")
     return True
